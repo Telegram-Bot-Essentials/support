@@ -1,0 +1,77 @@
+{
+    "name": "telegram-bot-essentials/support",
+    "description": "Contact support for telegram-bot-essentials/essence: tickets and contact handles",
+    "type": "library",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^12 || ^13",
+        "telegram-bot-essentials/essence": "^0.19.0-beta.8@beta",
+        "telegram-bot-essentials/settings": "~0.0.33"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.18",
+        "orchestra/testbench": "^10.0 || ^11.0",
+        "pestphp/pest": "^3.7 || ^4.0",
+        "pestphp/pest-plugin-laravel": "^3.1 || ^4.0"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "TelegramBotEssentials\\Support\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TelegramBotEssentials\\Support\\Tests\\": "tests/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Elyar",
+            "email": "elyareranjbar@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "extra": {
+        "laravel": {
+            "providers": [
+                "TelegramBotEssentials\\Support\\TbeSupportServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint --test",
+        "format": "pint",
+        "analyse": "phpstan analyse",
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "Composer\\Config::disableProcessTimeout",
+            "@build",
+            "@php vendor/bin/testbench serve --ansi"
+        ]
+    },
+    "suggest": {
+        "telegram-bot-essentials/access": "Lets alerts go to roles, not only the bot owner.",
+        "telegram-bot-essentials/user-management": "Links a ticket to the customer's profile."
+    }
+}
