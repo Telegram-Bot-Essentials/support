@@ -7,6 +7,8 @@ convention that a 0.x minor may carry breaking changes until the package's API s
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-11-03
+
 ### Added
 
 - Tickets between customers and staff: threads of text, photos and documents,
