@@ -17,6 +17,8 @@ use TelegramBotEssentials\Support\Telegram\Commands\Member\SupportCommand;
 use TelegramBotEssentials\Support\Telegram\StateAnswers\Admin\TicketsAnswer;
 use TelegramBotEssentials\Support\Telegram\StateAnswers\Member\SupportAnswer;
 use TelegramBotEssentials\Support\Telegram\TextMatchers\NativeReplyMatcher;
+use TelegramBotEssentials\Support\Web\SupportCustomerPlugin;
+use TelegramBotEssentials\Support\Web\SupportManagePlugin;
 
 /**
  * The app lists the reply keys in config('tbe-essence.keyboard'):
@@ -27,6 +29,8 @@ class TbeSupportServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(TicketContext::class);
+
+        webPanels()->manage(SupportManagePlugin::class)->customer(SupportCustomerPlugin::class);
     }
 
     public function boot(): void
@@ -35,6 +39,7 @@ class TbeSupportServiceProvider extends ServiceProvider
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadTranslationsFrom(__DIR__.'/../lang', 'tbe-support');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'tbe-support');
 
         callbackQueryBus()->addCallbackQueries([
             SupportQuery::class,
