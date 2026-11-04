@@ -40,7 +40,7 @@ class TicketHistory
         return implode("\n\n", array_reverse($lines));
     }
 
-    private static function author(TicketMessage $message, TicketSide $viewer): string
+    public static function author(TicketMessage $message, TicketSide $viewer): string
     {
         if ($message->side === TicketSide::Customer) {
             return (string) __('tbe-support::support.history.'.($viewer === TicketSide::Customer ? 'you' : 'customer'));
