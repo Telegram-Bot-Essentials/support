@@ -9,6 +9,7 @@
     <testsuites>
         <testsuite name="Feature">
             <directory>tests/Feature</directory>
+            <directory>tests/Web</directory>
         </testsuite>
     </testsuites>
     <source>

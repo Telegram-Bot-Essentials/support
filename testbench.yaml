@@ -1,7 +1,16 @@
 laravel: '@testbench'
 
+env:
+  - TBE_WEB_ENABLED=true
+  - APP_KEY=base64:a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
+  - DB_CONNECTION=sqlite
+  - SESSION_DRIVER=file
+  - SESSION_COOKIE=tbe_support_workbench
+  - CACHE_STORE=file
+
+
 providers:
-  # - Workbench\App\Providers\WorkbenchServiceProvider
+  - Workbench\App\Providers\WorkbenchServiceProvider
 
 migrations:
   - workbench/database/migrations

@@ -9,6 +9,7 @@
         "telegram-bot-essentials/settings": "~0.0.33"
     },
     "require-dev": {
+        "filament/filament": "^5.11",
         "larastan/larastan": "^3.0",
         "laravel/pint": "^1.18",
         "orchestra/testbench": "^10.0 || ^11.0",
