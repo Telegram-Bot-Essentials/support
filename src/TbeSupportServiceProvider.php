@@ -17,7 +17,6 @@ use TelegramBotEssentials\Support\Telegram\Commands\Member\SupportCommand;
 use TelegramBotEssentials\Support\Telegram\StateAnswers\Admin\TicketsAnswer;
 use TelegramBotEssentials\Support\Telegram\StateAnswers\Member\SupportAnswer;
 use TelegramBotEssentials\Support\Telegram\TextMatchers\NativeReplyMatcher;
-use TelegramBotEssentials\Support\Web\SupportCustomerPlugin;
 use TelegramBotEssentials\Support\Web\SupportManagePlugin;
 
 /**
@@ -30,7 +29,7 @@ class TbeSupportServiceProvider extends ServiceProvider
     {
         $this->app->singleton(TicketContext::class);
 
-        webPanels()->manage(SupportManagePlugin::class)->customer(SupportCustomerPlugin::class);
+        webPanels()->manage(SupportManagePlugin::class);
     }
 
     public function boot(): void
