@@ -1,16 +1,11 @@
 <?php
 
 return [
-    'nav_support' => 'پشتیبانی',
     'nav_tickets' => 'تیکت‌ها',
-    'contact' => 'تماس با ما',
-    'new_ticket' => 'تیکت جدید',
-    'message' => 'پیام شما',
     'reply' => 'پاسخ شما',
     'send' => 'ارسال',
     'sent' => 'ارسال شد.',
     'close' => 'بستن تیکت',
-    'back' => 'بازگشت',
     'ticket' => 'تیکت',
     'ticket_title' => 'تیکت #:id · :status',
     'status' => 'وضعیت',
