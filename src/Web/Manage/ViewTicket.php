@@ -71,7 +71,8 @@ class ViewTicket extends Page
         $content = new TicketContent(TicketContent::KIND_TEXT, is_string($text) ? $text : '');
 
         try {
-            $delivered = app(Tickets::class)->replyAsStaff($this->ticket(), wHook()->user(), $content);
+            // Panel in the viewer's language, the customer's copy in the bot's.
+            $delivered = inBotLocale(fn () => app(Tickets::class)->replyAsStaff($this->ticket(), wHook()->user(), $content));
         } catch (FeatureIsDisabled $e) {
             Notification::make()->title($e->getMessage())->danger()->send();
 
@@ -147,7 +148,7 @@ class ViewTicket extends Page
                 ->color('gray')
                 ->requiresConfirmation()
                 ->visible(fn (): bool => $this->ticket()->status !== TicketStatus::Closed)
-                ->action(fn (Tickets $tickets) => $tickets->closeAsStaff($this->ticket())),
+                ->action(fn (Tickets $tickets) => inBotLocale(fn () => $tickets->closeAsStaff($this->ticket()))),
         ];
     }
 }
