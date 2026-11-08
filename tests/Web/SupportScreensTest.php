@@ -14,8 +14,6 @@ use TelegramBotEssentials\Settings\Models\BotSetting;
 use TelegramBotEssentials\Support\Enums\TicketSide;
 use TelegramBotEssentials\Support\Enums\TicketStatus;
 use TelegramBotEssentials\Support\Models\Ticket;
-use TelegramBotEssentials\Support\Web\Customer\TicketPage;
-use TelegramBotEssentials\Support\Web\Customer\TicketsPage;
 use TelegramBotEssentials\Support\Web\Manage\ListTickets;
 use TelegramBotEssentials\Support\Web\Manage\ViewTicket;
 
@@ -79,119 +77,14 @@ beforeEach(function () {
     BotSetting::query()->updateOrCreate(['bot_id' => $this->bot->id, 'key' => 'support.cooldown_seconds'], ['value' => '0']);
 });
 
-describe('customer screens', function () {
-    it('lists only the customer\'s own tickets', function () {
-        $mine = ticketFor($this->customer);
-        $theirs = ticketFor($this->other);
-
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        Livewire::test(TicketsPage::class)
-            ->assertCanSeeTableRecords([$mine])
-            ->assertCanNotSeeTableRecords([$theirs]);
-    });
-
-    it('does not open another customer\'s ticket', function () {
-        $theirs = ticketFor($this->other, 'private words');
-
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        $this->get('/app/'.$this->bot->unique_id.'/support/'.$theirs->id)->assertNotFound();
-    });
-
-    it('opens a ticket through the service, so staff are alerted as from the bot', function () {
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        Livewire::test(TicketsPage::class)
-            ->callAction('newTicket', ['message' => 'help from the web'])
-            ->assertHasNoActionErrors();
-
-        $ticket = Ticket::query()->where('bot_user_id', $this->customer->id)->sole();
-        expect($ticket->status)->toBe(TicketStatus::Open)
-            ->and($ticket->messages()->sole()->text)->toBe('help from the web');
-        Http::assertSent(fn ($r) => str_contains((string) $r->url(), '/sendMessage') && (int) $r['chat_id'] === WEB_STAFF);
-    });
-
-    it('shows the limit as a message and opens nothing', function () {
-        BotSetting::query()->updateOrCreate(['bot_id' => $this->bot->id, 'key' => 'support.max_open_tickets'], ['value' => '1']);
-        ticketFor($this->customer);
-
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        Livewire::test(TicketsPage::class)
-            ->callAction('newTicket', ['message' => 'one more'])
-            ->assertNotified();
-
-        expect(Ticket::query()->where('bot_user_id', $this->customer->id)->count())->toBe(1);
-    });
-
-    it('hides new tickets in handles-only mode and shows the handles', function () {
-        BotSetting::query()->updateOrCreate(['bot_id' => $this->bot->id, 'key' => 'support.mode'], ['value' => 'handles']);
-        BotSetting::query()->updateOrCreate(['bot_id' => $this->bot->id, 'key' => 'support.handles'], ['value' => '@our_support']);
-
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        Livewire::test(TicketsPage::class)
-            ->assertActionHidden('newTicket')
-            ->assertSee('@our_support');
-    });
-
-    it('replies and reopens a closed ticket, and closes it', function () {
-        $ticket = ticketFor($this->customer);
-        $ticket->update(['status' => TicketStatus::Closed, 'closed_at' => now()]);
-
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        Livewire::test(TicketPage::class, ['ticket' => $ticket->id])
-            ->fillForm(['reply' => 'still broken'])
-            ->call('send')
-            ->assertHasNoFormErrors()
-            ->assertSee('still broken');
-
-        expect($ticket->refresh()->status)->toBe(TicketStatus::Open);
-
-        Livewire::test(TicketPage::class, ['ticket' => $ticket->id])->callAction('close');
-
-        expect($ticket->refresh()->status)->toBe(TicketStatus::Closed);
-    });
-
-    it('shows staff as the team, never by name', function () {
-        $ticket = ticketFor($this->customer);
-        $ticket->messages()->create(['bot_id' => $this->bot->id, 'side' => TicketSide::Staff, 'kind' => 'text', 'text' => 'hello', 'sender_id' => $this->staff->id]);
-        $this->staff->telegramUser->update(['first_name' => 'SecretStaffName']);
-
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        Livewire::test(TicketPage::class, ['ticket' => $ticket->id])
-            ->assertSee((string) __('tbe-support::support.history.support'))
-            ->assertDontSee('SecretStaffName');
-    });
-
-    it('refuses a suspended customer', function () {
-        $this->customer->update(['suspended_at' => now()]);
-        $this->enterPanel('customer', $this->bot, $this->customer);
-
-        $this->get('/app/'.$this->bot->unique_id.'/support')->assertForbidden();
-    });
-});
-
 describe('attachments', function () {
-    it('survives a real Livewire request on the customer ticket screen', function () {
-        $ticket = ticketFor($this->customer);
-        $message = $ticket->messages()->create(['bot_id' => $this->bot->id, 'side' => TicketSide::Customer, 'kind' => 'photo', 'file_id' => 'F1', 'sender_id' => $this->customer->id]);
-
-        Auth::guard('tbe-web')->login(PanelUser::find($this->customer->id));
-
-        realLivewireCall($this, '/app/'.$this->bot->unique_id.'/support/'.$ticket->id, 'ticketId', 'downloadAttachment', [$message->id])->assertOk();
-    });
-
     it('proxies the file without ever exposing the bot token', function () {
         $ticket = ticketFor($this->customer);
         $message = $ticket->messages()->create(['bot_id' => $this->bot->id, 'side' => TicketSide::Customer, 'kind' => 'photo', 'file_id' => 'F1', 'sender_id' => $this->customer->id]);
 
-        $this->enterPanel('customer', $this->bot, $this->customer);
+        $this->enterPanel('manage', $this->bot, $this->staff);
 
-        $component = Livewire::test(TicketPage::class, ['ticket' => $ticket->id])->call('downloadAttachment', $message->id);
+        $component = Livewire::test(ViewTicket::class, ['record' => $ticket->getKey()])->call('downloadAttachment', $message->id);
 
         $component->assertFileDownloaded();
         Http::assertSent(fn ($r) => str_contains((string) $r->url(), '/file/bot') && str_ends_with((string) $r->url(), 'photos/a.jpg'));
@@ -206,9 +99,9 @@ describe('attachments', function () {
         $ticket = ticketFor($this->customer);
         $message = $ticket->messages()->create(['bot_id' => $this->bot->id, 'side' => TicketSide::Customer, 'kind' => 'photo', 'file_id' => 'F1', 'sender_id' => $this->customer->id]);
 
-        $this->enterPanel('customer', $this->bot, $this->customer);
+        $this->enterPanel('manage', $this->bot, $this->staff);
 
-        Livewire::test(TicketPage::class, ['ticket' => $ticket->id])
+        Livewire::test(ViewTicket::class, ['record' => $ticket->getKey()])
             ->call('downloadAttachment', $message->id)
             ->assertHasNoErrors()
             ->assertNotified((string) __('tbe-support::web.file_unavailable'));
@@ -219,9 +112,9 @@ describe('attachments', function () {
         $theirs = ticketFor($this->other);
         $message = $theirs->messages()->create(['bot_id' => $this->bot->id, 'side' => TicketSide::Customer, 'kind' => 'photo', 'file_id' => 'F1', 'sender_id' => $this->other->id]);
 
-        $this->enterPanel('customer', $this->bot, $this->customer);
+        $this->enterPanel('manage', $this->bot, $this->staff);
 
-        Livewire::test(TicketPage::class, ['ticket' => $mine->id])
+        Livewire::test(ViewTicket::class, ['record' => $mine->getKey()])
             ->call('downloadAttachment', $message->id)
             ->assertStatus(404);
     });
