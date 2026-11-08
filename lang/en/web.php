@@ -1,16 +1,11 @@
 <?php
 
 return [
-    'nav_support' => 'Support',
     'nav_tickets' => 'Tickets',
-    'contact' => 'Contact us',
-    'new_ticket' => 'New ticket',
-    'message' => 'Your message',
     'reply' => 'Your reply',
     'send' => 'Send',
     'sent' => 'Sent.',
     'close' => 'Close ticket',
-    'back' => 'Back',
     'ticket' => 'Ticket',
     'ticket_title' => 'Ticket #:id · :status',
     'status' => 'Status',
