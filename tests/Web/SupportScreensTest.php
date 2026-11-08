@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
 use Livewire\Livewire;
 use TelegramBotEssentials\Essence\Models\BotUser;
-use TelegramBotEssentials\Essence\Web\Filament\PanelUser;
 use TelegramBotEssentials\Settings\Models\BotSetting;
 use TelegramBotEssentials\Support\Enums\TicketSide;
 use TelegramBotEssentials\Support\Enums\TicketStatus;
@@ -165,7 +164,7 @@ describe('manage screens', function () {
         $ticket = ticketFor($this->customer);
         $message = $ticket->messages()->create(['bot_id' => $this->bot->id, 'side' => TicketSide::Customer, 'kind' => 'photo', 'file_id' => 'F1', 'sender_id' => $this->customer->id]);
 
-        Auth::guard('tbe-web')->login(PanelUser::find($this->staff->id));
+        Auth::guard('tbe-web')->login($this->panelAccount($this->staff));
 
         realLivewireCall($this, '/manage/'.$this->bot->unique_id.'/tickets/'.$ticket->id, 'ViewTicket', 'downloadAttachment', [$message->id])->assertOk();
     });
