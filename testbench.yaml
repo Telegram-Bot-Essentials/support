@@ -2,6 +2,7 @@ laravel: '@testbench'
 
 env:
   - TBE_WEB_ENABLED=true
+  - TBE_WEB_ACCOUNT_MODEL=Workbench\App\Models\User
   - APP_KEY=base64:a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=
   - DB_CONNECTION=sqlite
   - SESSION_DRIVER=file
