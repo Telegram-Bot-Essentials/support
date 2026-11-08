@@ -1,13 +1,11 @@
 <x-filament-panels::page>
-    @if (method_exists($this, 'customerName'))
-        <x-filament::section :heading="__('tbe-support::web.customer')" icon="heroicon-o-user" compact>
-            <div>{{ $this->customerName() }} @if ($this->customerUsername()) ({{ $this->customerUsername() }}) @endif</div>
-            <div>ID: {{ $this->customerPeerId() }}</div>
-            @if (filled($context = $this->contextHtml()))
-                <div>{!! nl2br($context) !!}</div>
-            @endif
-        </x-filament::section>
-    @endif
+    <x-filament::section :heading="__('tbe-support::web.customer')" icon="heroicon-o-user" compact>
+        <div>{{ $this->customerName() }} @if ($this->customerUsername()) ({{ $this->customerUsername() }}) @endif</div>
+        <div>ID: {{ $this->customerPeerId() }}</div>
+        @if (filled($context = $this->contextHtml()))
+            <div>{!! nl2br($context) !!}</div>
+        @endif
+    </x-filament::section>
 
     @foreach ($this->threadMessages() as $message)
         <x-filament::section
