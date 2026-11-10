@@ -3,6 +3,7 @@
 namespace TelegramBotEssentials\Support\Web\Manage;
 
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Concerns\InteractsWithRecord;
@@ -10,6 +11,7 @@ use Filament\Resources\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use TelegramBotEssentials\Essence\Exceptions\FeatureIsDisabled;
 use TelegramBotEssentials\Essence\Web\Filament\Concerns\GuardsResourcePage;
@@ -57,9 +59,15 @@ class ViewTicket extends Page
             ->components([
                 Textarea::make('reply')
                     ->label((string) __('tbe-support::web.reply'))
-                    ->required()
+                    ->requiredWithout('attachment')
                     ->maxLength(4000)
                     ->rows(3),
+                // Kept out of storage: it goes to Telegram, which keeps it for the ticket.
+                FileUpload::make('attachment')
+                    ->label((string) __('tbe-support::web.attach'))
+                    ->helperText((string) __('tbe-support::web.attach_hint', ['mb' => intdiv(TicketFiles::MAX_UPLOAD_KB, 1024)]))
+                    ->storeFiles(false)
+                    ->maxSize(TicketFiles::MAX_UPLOAD_KB),
             ])
             ->statePath('data');
     }
@@ -67,17 +75,24 @@ class ViewTicket extends Page
     public function send(): void
     {
         $state = $this->form->getState();
-        $text = $state['reply'] ?? null;
-        $content = new TicketContent(TicketContent::KIND_TEXT, is_string($text) ? $text : '');
+        $text = is_string($state['reply'] ?? null) ? $state['reply'] : '';
+        $file = $this->uploadedFile($state['attachment'] ?? null);
 
         try {
+            $content = $file === null
+                ? new TicketContent(TicketContent::KIND_TEXT, $text)
+                : app(TicketFiles::class)->upload(wHook()->user(), (string) $file->get(), $file->getClientOriginalName(), $file->getMimeType(), $text);
+
             // Panel in the viewer's language, the customer's copy in the bot's.
             $delivered = inBotLocale(fn () => app(Tickets::class)->replyAsStaff($this->ticket(), wHook()->user(), $content));
         } catch (FeatureIsDisabled $e) {
+            // Nothing recorded: the form keeps what was typed, to try again.
             Notification::make()->title($e->getMessage())->danger()->send();
 
             return;
         }
+
+        $file?->delete();
 
         // Saved either way; the staff must know when the customer did not get it.
         $delivered
@@ -85,6 +100,13 @@ class ViewTicket extends Page
             : Notification::make()->title((string) __('tbe-support::support.answers.not_delivered'))->warning()->send();
 
         $this->form->fill();
+    }
+
+    private function uploadedFile(mixed $state): ?TemporaryUploadedFile
+    {
+        $files = is_array($state) ? array_values($state) : [$state];
+
+        return ($files[0] ?? null) instanceof TemporaryUploadedFile ? $files[0] : null;
     }
 
     public function downloadAttachment(int $messageId): ?StreamedResponse
