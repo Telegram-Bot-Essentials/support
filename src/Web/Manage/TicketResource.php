@@ -7,6 +7,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use TelegramBotEssentials\Essence\Web\Filament\PanelDates;
 use TelegramBotEssentials\Essence\Web\Filament\PanelGroup;
 use TelegramBotEssentials\Essence\Web\Filament\PanelResource;
@@ -49,6 +50,36 @@ class TicketResource extends PanelResource
     public static function waitingCount(): int
     {
         return static::getEloquentQuery()->where('status', TicketStatus::Open->value)->count();
+    }
+
+    /** @return list<string> a ticket by its number, or its customer's username or name */
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['id', 'customer.telegramUser.username', 'customer.telegramUser.first_name'];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        return '#'.$record->getKey();
+    }
+
+    /** @return array<string, string> */
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return $record instanceof Ticket ? [
+            (string) __('tbe-support::web.customer') => People::fullName($record->customer),
+            (string) __('tbe-support::web.status') => $record->status->label(),
+        ] : [];
+    }
+
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return ViewTicket::getUrl(['record' => $record]);
+    }
+
+    public static function getGlobalSearchEloquentQuery(): Builder
+    {
+        return parent::getGlobalSearchEloquentQuery()->with('customer.telegramUser');
     }
 
     public static function table(Table $table): Table
