@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Filament\Livewire\GlobalSearch;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Client\Factory;
 use Illuminate\Support\Facades\Auth;
@@ -199,5 +200,21 @@ describe('sidebar badge', function () {
         $this->enterPanel('manage', $this->bot, $this->grant($this->makeBotUser($this->bot, 8004), 'web.manage'));
 
         expect(TicketResource::getNavigationBadge())->toBeNull();
+    });
+});
+
+describe('sidebar search', function () {
+    it('finds this bot\'s tickets by customer, never another bot\'s', function () {
+        $this->customer->telegramUser->update(['username' => 'vpn_fan']);
+        $mine = ticketFor($this->customer);
+        $otherBot = $this->makeBot(['unique_id' => 'other-search-bot']);
+        $outsider = $this->makeBotUser($otherBot, 8101);
+        $outsider->telegramUser->update(['username' => 'vpn_outsider', 'first_name' => 'Outsider']);
+        ticketFor($outsider);
+        $this->enterPanel('manage', $this->bot, $this->staff);
+
+        Livewire::test(GlobalSearch::class)->set('search', 'vpn')
+            ->assertSee('#'.$mine->id)
+            ->assertDontSee('Outsider');
     });
 });
