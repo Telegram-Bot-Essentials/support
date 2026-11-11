@@ -60,7 +60,7 @@ class TicketResource extends PanelResource
 
     public static function getGlobalSearchResultTitle(Model $record): string
     {
-        return '#'.$record->getKey();
+        return $record instanceof Ticket ? '#'.$record->id : '';
     }
 
     /** @return array<string, string> */
