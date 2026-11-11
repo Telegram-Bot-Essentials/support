@@ -7,6 +7,42 @@ convention that a 0.x minor may carry breaking changes until the package's API s
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-11-11
+
+### Added
+
+- Add ticket file serving for the screens.
+- Add the ticket thread views.
+- Add english screen strings.
+- Add persian screen strings.
+- Register the support panel plugins.
+- Add the support plugins for both panels.
+- Share the ticket thread between screens.
+- Add the customer ticket pages.
+- Add the manage ticket resource.
+- Upload a panel file to telegram for a ticket.
+- Word ticket attachments in english.
+- Word ticket attachments in persian.
+- Attach a file to a ticket reply.
+- Add empty-list messages.
+- Group, date and tidy the panel screens.
+- Find tickets from the sidebar search.
+- Show the ticket customer as facts and dates in the viewer's calendar.
+- Let the record number be copied from the list.
+
+### Changed
+
+- Show the ticket thread for staff only.
+- Register only the manage plugin.
+- Remove the customer panel plugin.
+- Remove the shared ticket thread concern.
+- Remove the customer ticket pages.
+- Fold the ticket thread into the staff view.
+
+### Fixed
+
+- Send ticket replies in the bot's language.
+
 ## [0.0.1] - 2026-11-03
 
 ### Added
