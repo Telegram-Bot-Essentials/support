@@ -7,11 +7,14 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use TelegramBotEssentials\Essence\Web\Filament\PanelDates;
+use TelegramBotEssentials\Essence\Web\Filament\PanelGroup;
 use TelegramBotEssentials\Essence\Web\Filament\PanelResource;
 use TelegramBotEssentials\Support\Enums\TicketStatus;
 use TelegramBotEssentials\Support\Models\Ticket;
 use TelegramBotEssentials\Support\Services\People;
 use TelegramBotEssentials\Support\Web\TicketStatusColor;
+use UnitEnum;
 
 class TicketResource extends PanelResource
 {
@@ -24,6 +27,8 @@ class TicketResource extends PanelResource
     protected static ?string $tenantOwnershipRelationshipName = 'bot';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedLifebuoy;
+
+    protected static string|UnitEnum|null $navigationGroup = PanelGroup::Support;
 
     public static function getNavigationLabel(): string
     {
@@ -40,11 +45,10 @@ class TicketResource extends PanelResource
         return (string) __('tbe-support::web.nav_tickets');
     }
 
-    public static function getNavigationBadge(): ?string
+    /** Open tickets wait for an answer; counted inside the current bot only. */
+    public static function waitingCount(): int
     {
-        $open = Ticket::query()->where('status', TicketStatus::Open->value)->count();
-
-        return $open > 0 ? (string) $open : null;
+        return static::getEloquentQuery()->where('status', TicketStatus::Open->value)->count();
     }
 
     public static function table(Table $table): Table
@@ -55,7 +59,8 @@ class TicketResource extends PanelResource
                 TextColumn::make('id')->label((string) __('tbe-support::web.ticket'))->prefix('#')->sortable(),
                 TextColumn::make('customer_name')
                     ->label((string) __('tbe-support::web.customer'))
-                    ->state(fn (Ticket $record): string => People::fullName($record->customer)),
+                    ->state(fn (Ticket $record): string => People::fullName($record->customer))
+                    ->description(fn (Ticket $record): ?string => People::username($record->customer)),
                 TextColumn::make('status')
                     ->label((string) __('tbe-support::web.status'))
                     ->badge()
@@ -64,10 +69,14 @@ class TicketResource extends PanelResource
                 TextColumn::make('last_replier')
                     ->label((string) __('tbe-support::web.last_replier'))
                     ->state(fn (Ticket $record): ?string => $record->lastStaff ? People::fullName($record->lastStaff) : null),
-                TextColumn::make('last_message_at')->label((string) __('tbe-support::web.last_message'))->since()->sortable(),
+                PanelDates::since(TextColumn::make('last_message_at'))->label((string) __('tbe-support::web.last_message'))->sortable(),
             ])
             // Whoever has waited longest comes first.
             ->defaultSort('last_message_at', 'asc')
+            ->poll('30s')
+            ->persistFiltersInSession()
+            ->persistSearchInSession()
+            ->emptyStateHeading((string) __('tbe-support::web.empty.tickets'))
             ->recordUrl(fn (Ticket $record): string => ViewTicket::getUrl(['record' => $record]));
     }
 
