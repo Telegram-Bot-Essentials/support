@@ -41,6 +41,7 @@ convention that a 0.x minor may carry breaking changes until the package's API s
 
 ### Fixed
 
+- Title search results from the ticket's own id.
 - Send ticket replies in the bot's language.
 
 ## [0.0.1] - 2026-11-03
