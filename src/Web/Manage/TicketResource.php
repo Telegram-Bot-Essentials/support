@@ -87,7 +87,7 @@ class TicketResource extends PanelResource
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => $query->with(['customer.telegramUser', 'lastStaff.telegramUser']))
             ->columns([
-                TextColumn::make('id')->label((string) __('tbe-support::web.ticket'))->prefix('#')->sortable(),
+                TextColumn::make('id')->label((string) __('tbe-support::web.ticket'))->prefix('#')->sortable()->copyable(),
                 TextColumn::make('customer_name')
                     ->label((string) __('tbe-support::web.customer'))
                     ->state(fn (Ticket $record): string => People::fullName($record->customer))
