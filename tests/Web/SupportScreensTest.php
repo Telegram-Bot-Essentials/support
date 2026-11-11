@@ -14,6 +14,7 @@ use TelegramBotEssentials\Support\Enums\TicketSide;
 use TelegramBotEssentials\Support\Enums\TicketStatus;
 use TelegramBotEssentials\Support\Models\Ticket;
 use TelegramBotEssentials\Support\Web\Manage\ListTickets;
+use TelegramBotEssentials\Support\Web\Manage\TicketResource;
 use TelegramBotEssentials\Support\Web\Manage\ViewTicket;
 
 /** Clicks through the real route and middleware, as a browser does. Livewire::test() skips them. */
@@ -178,5 +179,25 @@ describe('manage screens', function () {
 
         expect($ticket->refresh()->status)->toBe(TicketStatus::Closed);
         Http::assertSent(fn ($r) => str_contains((string) $r->url(), '/sendMessage') && (int) $r['chat_id'] === WEB_CUSTOMER);
+    });
+});
+
+describe('sidebar badge', function () {
+    it('counts open tickets of this bot only', function () {
+        ticketFor($this->customer);
+        ticketFor($this->other)->update(['status' => TicketStatus::Answered]);
+        $otherBot = $this->makeBot(['unique_id' => 'other-support-bot']);
+        ticketFor($this->makeBotUser($otherBot, 8100));
+
+        $this->enterPanel('manage', $this->bot, $this->staff);
+
+        expect(TicketResource::getNavigationBadge())->toBe('1');
+    });
+
+    it('shows nothing to who may not handle tickets', function () {
+        ticketFor($this->customer);
+        $this->enterPanel('manage', $this->bot, $this->grant($this->makeBotUser($this->bot, 8004), 'web.manage'));
+
+        expect(TicketResource::getNavigationBadge())->toBeNull();
     });
 });
