@@ -1,16 +1,19 @@
 <x-filament-panels::page>
     <x-filament::section :heading="__('tbe-support::web.customer')" icon="heroicon-o-user" compact>
-        <div>{{ $this->customerName() }} @if ($this->customerUsername()) ({{ $this->customerUsername() }}) @endif</div>
-        <div>ID: {{ $this->customerPeerId() }}</div>
+        <x-tbe::facts>
+            <x-tbe::fact :label="__('tbe-support::web.customer')" :value="$this->customerName()" />
+            <x-tbe::fact label="@" :value="$this->customerUsername()" />
+            <x-tbe::fact label="ID"><code style="user-select:all;">{{ $this->customerPeerId() }}</code></x-tbe::fact>
+        </x-tbe::facts>
         @if (filled($context = $this->contextHtml()))
-            <div>{!! nl2br($context) !!}</div>
+            <div style="margin-top:.75rem;">{!! nl2br($context) !!}</div>
         @endif
     </x-filament::section>
 
     @foreach ($this->threadMessages() as $message)
         <x-filament::section
             :heading="$this->authorOf($message)"
-            :description="$message->created_at?->format('Y-m-d H:i')"
+            :description="\TelegramBotEssentials\Essence\Web\PanelCalendar::format($message->created_at)"
             :icon="$message->side === \TelegramBotEssentials\Support\Enums\TicketSide::Staff ? 'heroicon-o-lifebuoy' : 'heroicon-o-user'"
             compact
             wire:key="message-{{ $message->id }}"
